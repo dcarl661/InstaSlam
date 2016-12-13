@@ -7,4 +7,6 @@
     <color name="HomeFragmentBG">#9eef42</color>
     <color name="ProfileFragmentBG">#42b2ef</color>
     <color name="SearchFragmentBG">#c970ec</color>
+
+    <color name="black_overlay">#66000000</color>
 </resources>

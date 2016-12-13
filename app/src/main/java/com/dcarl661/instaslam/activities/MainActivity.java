@@ -1,5 +1,7 @@
 package com.dcarl661.instaslam.activities;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -61,13 +63,20 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
+        //we need a context and because i'm going to use the context inside the onclicklistener
+        //   i have to get it here
+        final Context context = this;
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setImageDrawable(ContextCompat.getDrawable(getBaseContext(),R.drawable.new_post_button));
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                //from the ASTemplate this floating action button did a Snackbar.make
+                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                //        .setAction("Action", null).show();
+                //but
+                Intent intent=new Intent(context,MediaActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -90,6 +99,12 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            //this is the hamburger menu selection handler
+            // the ASTemplate had an initial settings but it just returned
+            // so i created a new activity.java/xml and told then android operating system
+            // my intent to start the activity
+            Intent intent = new Intent(this,SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
