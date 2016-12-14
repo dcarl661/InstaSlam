@@ -137,6 +137,20 @@ public class MediaActivity extends AppCompatActivity {
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
     }
 
+/*
+    Here's how I got the images to the emulator
+
+    C:\Program Files (x86)\Android\android-sdk\platform-tools> adb push C:\hold\xfer\training1.jpg /sdcard/Pictures
+    adb server is out of date.  killing...
+            * daemon started successfully *
+            884 KB/s (88284 bytes in 0.097s)
+    C:\Program Files (x86)\Android\android-sdk\platform-tools> adb push C:\hold\xfer\andromeda.jpg /sdcard/Pictures
+    1162 KB/s (296660 bytes in 0.249s)
+
+    C:\Program Files (x86)\Android\android-sdk\platform-tools> adb push C:\hold\xfer\theyliverrp2.jpg /sdcard/Pictures
+    98 KB/s (5225 bytes in 0.052s)
+*/
+
     public void retrieveAndSetImages()
     {
         Log.v("Donkey", "retrieveAndSetImages");
