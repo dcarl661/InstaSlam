@@ -1,14 +1,27 @@
 package com.dcarl661.instaslam.activities;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.dcarl661.instaslam.R;
+import com.dcarl661.instaslam.model.InstaImageModel;
+
+import java.util.ArrayList;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -85,6 +98,10 @@ public class MediaActivity extends AppCompatActivity {
         }
     };
 
+    final int PERMISSION_READ_EXTERNAL        = 111;
+    private ArrayList<InstaImageModel> images = new ArrayList<InstaImageModel>();
+    private InstaImageModel selectedImage;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,10 +121,77 @@ public class MediaActivity extends AppCompatActivity {
             }
         });
 
+        //We have an added permission entry in the manifest
+        // here we check to see if the User has granted.
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)<= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},PERMISSION_READ_EXTERNAL);
+            //note if they grant the grant call back also calls retrieveAndImages()
+        }
+        else{
+            retrieveAndSetImages();
+        }
+
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+    }
+
+    public void retrieveAndSetImages()
+    {
+        Log.v("Donkey", "retrieveAndSetImages");
+
+        //like an sql cursor but in androids f'ed up syntax
+        Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,null,null,null,null);
+
+        Log.v("FISH", "retrieveAndSetImages11111 getcount="+cursor.getCount());
+
+        if(cursor != null)
+        {
+            cursor.moveToFirst();
+            Log.v("FISH", "Move to first");
+        }
+        else
+        {
+            Log.v("FISH", "Cursor Is NUll");
+            return;
+        }
+        Log.v("FISH", "retrieveAndSetImages33333");
+
+        images.clear();//ArrayList  created above,  images
+
+        for(int x=0; x<cursor.getCount(); x++)
+        {
+            cursor.moveToPosition(x);
+            String s=cursor.getString(1);
+            Log.v("FISH", "URL: " + s);
+            InstaImageModel instaImageModel=new InstaImageModel(Uri.parse(s));
+            images.add(instaImageModel);
+        }
+        cursor.close();
+
+        runOnUiThread(new Runnable(){
+            @Override
+            public void run(){
+                //set images on ercycler view adampoer
+                //update images
+            }
+        });
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch (requestCode) {
+            case PERMISSION_READ_EXTERNAL: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.v("FISH", "Calling retrieveAndSetImages");
+                    retrieveAndSetImages();
+                }
+            }
+        }
     }
 
     @Override
