@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -153,45 +154,43 @@ public class MediaActivity extends AppCompatActivity {
 
     public void retrieveAndSetImages()
     {
-        Log.v("Donkey", "retrieveAndSetImages");
-
-        //like an sql cursor but in androids f'ed up syntax
-        Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,null,null,null,null);
-
-        Log.v("FISH", "retrieveAndSetImages11111 getcount="+cursor.getCount());
-
-        if(cursor != null)
-        {
-            cursor.moveToFirst();
-            Log.v("FISH", "Move to first");
-        }
-        else
-        {
-            Log.v("FISH", "Cursor Is NUll");
-            return;
-        }
-        Log.v("FISH", "retrieveAndSetImages33333");
-
-        images.clear();//ArrayList  created above,  images
-
-        for(int x=0; x<cursor.getCount(); x++)
-        {
-            cursor.moveToPosition(x);
-            String s=cursor.getString(1);
-            Log.v("FISH", "URL: " + s);
-            InstaImageModel instaImageModel=new InstaImageModel(Uri.parse(s));
-            images.add(instaImageModel);
-        }
-        cursor.close();
-
-        runOnUiThread(new Runnable(){
+        AsyncTask.execute(new Runnable() {
             @Override
-            public void run(){
-                //set images on ercycler view adampoer
-                //update images
+            public void run() {
+                images.clear();//ArrayList  created above,  images
+                //like an sql cursor but in androids f'ed up syntax
+                Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,null,null,null,null);
+                Log.v("FISH", "retrieveAndSetImages11111 getcount="+cursor.getCount());
+                if(cursor != null)
+                {
+                    cursor.moveToFirst();
+                    Log.v("FISH", "Move to first");
+                }
+                else
+                {
+                    Log.v("FISH", "Cursor Is NUll");
+                    return;
+                }
+                Log.v("FISH", "retrieveAndSetImages33333");
+                for(int x=0; x<cursor.getCount(); x++)
+                {
+                    cursor.moveToPosition(x);
+                    String s=cursor.getString(1);
+                    Log.v("FISH", "URL: " + s);
+                    InstaImageModel instaImageModel=new InstaImageModel(Uri.parse(s));
+                    images.add(instaImageModel);
+                }
+                cursor.close();
+                //todo
+                runOnUiThread(new Runnable(){
+                    @Override
+                    public void run(){
+                        //set images on ercycler view adampoer
+                        //update images
+                    }
+                });
             }
         });
-
     }
 
     @Override
