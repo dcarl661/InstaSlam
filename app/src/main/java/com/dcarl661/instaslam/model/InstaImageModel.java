@@ -9,6 +9,9 @@ import android.net.Uri;
 public class InstaImageModel
 {
     private Uri imgResource;
+    public  Uri getImgResourceURI() {
+        return imgResource;
+    }
 
     public InstaImageModel(Uri imgResourse) {
         this.imgResource = imgResourse;

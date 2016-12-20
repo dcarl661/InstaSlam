@@ -4,6 +4,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
@@ -15,14 +17,21 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.dcarl661.instaslam.R;
 import com.dcarl661.instaslam.model.InstaImageModel;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -101,7 +110,7 @@ public class MediaActivity extends AppCompatActivity {
 
     final int PERMISSION_READ_EXTERNAL        = 111;
     private ArrayList<InstaImageModel> images = new ArrayList<InstaImageModel>();
-    private InstaImageModel selectedImage;
+    private ImageView selectedImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +130,18 @@ public class MediaActivity extends AppCompatActivity {
                 toggle();
             }
         });
+
+        //SEtup the recycler view "boilderplate" the classes are in this java
+        //content_images in recyclerview in the xml design
+        selectedImage=(ImageView)findViewById(R.id.selected_image); //store reference to the selected image
+        RecyclerView recyclerView = (RecyclerView)findViewById(R.id.content_images);
+        //images is an array list added e
+        ImagesAdapter adapter     = new ImagesAdapter(images);
+        recyclerView.setAdapter(adapter);
+        GridLayoutManager layoutManager=new GridLayoutManager(getBaseContext(),4); //four across
+        layoutManager.setOrientation(GridLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+
 
         //We have an added permission entry in the manifest
         // here we check to see if the User has granted.
@@ -259,4 +280,112 @@ public class MediaActivity extends AppCompatActivity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
+
+    public class ImagesAdapter extends RecyclerView.Adapter<ImageViewHolder>
+    {
+        //put your property before generating the constructor and it will generate
+        // the constructor with the parameter
+        private ArrayList<InstaImageModel> images;
+        public ImagesAdapter(ArrayList<InstaImageModel> images) {
+            this.images = images;
+        }
+
+        @Override
+        public ImageViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+        {
+            View card= LayoutInflater.from(parent.getContext()).inflate(R.layout.card_image,parent,false);
+            return new ImageViewHolder(card);
+        }
+
+        @Override
+        public void onBindViewHolder(ImageViewHolder holder, int position)
+        {
+            final InstaImageModel image=images.get(position);
+            holder.updateUI(image);
+            final ImageViewHolder vHolder=holder;//because we need the final keyword
+            holder.itemView.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v){
+                    selectedImage.setImageDrawable(vHolder.imageView.getDrawable());
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount(){
+            return images.size();
+        }
+
+    }
+    //note having the adapter and holder in the same file seems easier but it breaks encapsulation
+    //   note that the private ImageView can be accessed in the adapter directly not via a method
+    public class ImageViewHolder extends RecyclerView.ViewHolder
+    {
+        private ImageView imageView;
+        public ImageViewHolder(View itemView)
+        {
+            super(itemView);
+            imageView=(ImageView)itemView.findViewById(R.id.image_thumb);
+        }
+        public void updateUI(InstaImageModel image)
+        {
+            //call decodeURI sync
+            this.imageView.setImageBitmap(decodeURI(image.getImgResourceURI().getPath()));
+            //Async
+            //DecodeBitmap task = new DecodeBitmap(imageView,image);
+           // task.execute();
+        }
+    }
+
+    //here you can tweek for better quality but  these are our thumbnails so lesser is better for ram
+    public Bitmap decodeURI(String filePath){
+        BitmapFactory.Options options=new BitmapFactory.Options();
+        options.inJustDecodeBounds=true;
+        BitmapFactory.decodeFile(filePath, options);
+
+        //only scale if we need to 16384 buffer
+        Boolean scaleByHeight = Math.abs(options.outHeight - 100) >= Math.abs(options.outWidth - 100);
+        if( options.outHeight * options.outWidth * 2 >= 16384)
+        {
+            double sampleSize    = scaleByHeight ? options.outHeight/1000:options.outWidth/1000;
+            options.inSampleSize = (int) Math.pow(2d,Math.floor(Math.log(sampleSize)/Math.log(2d)));
+        }
+
+        options.inJustDecodeBounds = false;
+        options.inTempStorage      = new byte[512];
+        Bitmap output              = BitmapFactory.decodeFile(filePath,options);
+        return output;
+    }
+
+    class DecodeBitmap extends AsyncTask<Void, Void, Bitmap>
+    {
+        //weak and strong effect how this will live in memory will get garbagecollected
+        private final WeakReference<ImageView> mImageViewWeakReference;
+        private InstaImageModel image;
+
+        public DecodeBitmap(ImageView imageView, InstaImageModel image) {
+            this.mImageViewWeakReference = new WeakReference<ImageView>(imageView);
+            this.image=image;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Void... params) {
+            return decodeURI(image.getImgResourceURI().getPath());
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            final ImageView img = mImageViewWeakReference.get();
+
+            if (img != null) {
+                //can be null because this backgound task may end but the user
+                // is already off the screen doing something else
+                img.setImageBitmap(bitmap);
+            }
+        }
+
+    }
+
+
 }
