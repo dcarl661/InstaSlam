@@ -329,11 +329,11 @@ public class MediaActivity extends AppCompatActivity {
         }
         public void updateUI(InstaImageModel image)
         {
-            //call decodeURI sync
+            //call decodeURI sync and works
             this.imageView.setImageBitmap(decodeURI(image.getImgResourceURI().getPath()));
             //Async
-            //DecodeBitmap task = new DecodeBitmap(imageView,image);
-           // task.execute();
+            DecodeBitmap task = new DecodeBitmap(imageView,image);
+            task.execute();
         }
     }
 
